@@ -1,11 +1,15 @@
 import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
 
 export function UserMenu() {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Don't show on the landing page
+  if (!user || location.pathname === '/') return null;
 
   const handleSignOut = async () => {
     try {
@@ -16,10 +20,8 @@ export function UserMenu() {
     }
   };
 
-  if (!user) return null;
-
   return (
-    <div className="fixed top-8 right-8 z-50">
+    <div className="fixed bottom-8 right-8 z-50">
       <Button
         onClick={handleSignOut}
         variant="ghost"

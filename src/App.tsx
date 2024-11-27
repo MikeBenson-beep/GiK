@@ -19,7 +19,7 @@ import SignIn from '@/pages/SignIn';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import AuthCallback from '@/pages/auth/callback';
 import Auth from '@/pages/Auth';
-import { UserMenu } from '@/components/UserMenu';
+import { SignOutButton } from '@/components/SignOutButton';
 
 function Home() {
   const articles = [
@@ -125,7 +125,7 @@ function Home() {
 export default function App() {
   return (
     <AuthProvider>
-      <UserMenu />
+      <SignOutButton />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/auth" element={<Auth />} />
