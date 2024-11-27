@@ -18,6 +18,8 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import SignIn from '@/pages/SignIn';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import AuthCallback from '@/pages/auth/callback';
+import Auth from '@/pages/Auth';
+import { SignOutButton } from '@/components/SignOutButton';
 
 function Home() {
   const articles = [
@@ -123,8 +125,10 @@ function Home() {
 export default function App() {
   return (
     <AuthProvider>
+      <SignOutButton />
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/auth" element={<Auth />} />
         <Route path="/traditional" element={<Traditional />} />
         <Route path="/quant" element={<Quant />} />
         <Route path="/auth/callback" element={<AuthCallback />} />

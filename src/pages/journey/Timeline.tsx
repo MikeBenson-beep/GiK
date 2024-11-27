@@ -8,6 +8,9 @@ import { Card } from '@/components/ui/card';
 import { JourneyProgress } from '@/components/JourneyProgress';
 import { CustomOption } from '@/components/CustomOption';
 import { JourneySummary } from '@/components/JourneySummary';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/components/ui/use-toast';
+import { updateProfile } from '@/services/ProfileService';
 
 const timeframes = [
   {
@@ -38,11 +41,27 @@ const timeframes = [
 
 export default function Timeline() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [selectedTimeframe, setSelectedTimeframe] = useState<string | null>(null);
   const [showSummary, setShowSummary] = useState(false);
 
-  const handleComplete = () => {
-    setShowSummary(true);
+  const handleTimelineSelection = async () => {
+    try {
+      if (!user || !selectedTimeframe) throw new Error('No user or timeframe selected');
+      
+      await updateProfile(user.id, {
+        time_horizon: selectedTimeframe
+      });
+      
+      setShowSummary(true);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save timeline. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleCustomOption = (value: string) => {
@@ -162,7 +181,7 @@ export default function Timeline() {
             className="flex justify-center"
           >
             <Button
-              onClick={handleComplete}
+              onClick={handleTimelineSelection}
               disabled={!selectedTimeframe}
               className="group relative px-8 py-6 bg-white/5 hover:bg-white/10 text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
