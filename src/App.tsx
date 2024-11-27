@@ -65,7 +65,7 @@ function Home() {
 
             <div className="flex flex-col items-center gap-8">
               <JourneyButton />
-              <WaitlistForm />
+              
             </div>
           </div>
         </div>
