@@ -8,6 +8,8 @@ import { Card } from '@/components/ui/card';
 import { JourneyProgress } from '@/components/JourneyProgress';
 import { CustomOption } from '@/components/CustomOption';
 import { JourneySummary } from '@/components/JourneySummary';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/components/ui/use-toast';
 
 const timeframes = [
   {
@@ -38,11 +40,27 @@ const timeframes = [
 
 export default function Timeline() {
   const navigate = useNavigate();
+  const { updateUserProfile } = useAuth();
+  const { toast } = useToast();
   const [selectedTimeframe, setSelectedTimeframe] = useState<string | null>(null);
   const [showSummary, setShowSummary] = useState(false);
 
-  const handleComplete = () => {
-    setShowSummary(true);
+  const handleComplete = async () => {
+    if (!selectedTimeframe) return;
+
+    try {
+      await updateUserProfile({
+        time_horizon: selectedTimeframe,
+        updated_at: new Date().toISOString(),
+      });
+      setShowSummary(true);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save your preferences. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleCustomOption = (value: string) => {

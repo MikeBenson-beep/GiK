@@ -1,13 +1,23 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function JourneyButton() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const handleClick = () => {
+    if (user) {
+      navigate('/journey');
+    } else {
+      navigate('/auth');
+    }
+  };
 
   return (
     <motion.button
-      onClick={() => navigate('/journey')}
+      onClick={handleClick}
       className="group relative px-12 py-4 bg-white text-black rounded-full overflow-hidden transition-all duration-500"
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}

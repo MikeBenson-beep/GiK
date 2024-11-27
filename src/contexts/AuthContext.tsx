@@ -7,6 +7,8 @@ interface AuthContextType {
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -14,73 +16,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const registerUserProfile = async (user: User) => {
-    try {
-      console.log('Attempting to register user profile:', {
-        id: user.id,
-        email: user.email,
-        metadata: user.user_metadata
-      });
-
-      // First, check if profile exists
-      const { data: existingProfile, error: fetchError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', user.id)
-        .single();
-
-      if (fetchError) {
-        console.error('Error checking existing profile:', fetchError);
-      }
-
-      if (!existingProfile) {
-        console.log('No existing profile found, creating new profile');
-        const { data, error } = await supabase
-          .from('profiles')
-          .insert([
-            {
-              id: user.id,
-              email: user.email,
-              name: user.user_metadata.full_name,
-              portfolio: [],
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            }
-          ])
-          .select()
-          .single();
-
-        if (error) {
-          console.error('Error inserting new profile:', error);
-          throw error;
-        }
-
-        console.log('Successfully created new profile:', data);
-      } else {
-        console.log('Existing profile found, updating profile');
-        const { data, error } = await supabase
-          .from('profiles')
-          .update({
-            email: user.email,
-            name: user.user_metadata.full_name,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', user.id)
-          .select();
-
-        if (error) {
-          console.error('Error updating profile:', error);
-          throw error;
-        }
-
-        console.log('Successfully updated profile:', data);
-      }
-    } catch (error) {
-      console.error('Error in registerUserProfile:', error);
-      throw error;
-    }
-  };
 
   useEffect(() => {
     // Check if we're in a browser environment
@@ -91,20 +26,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Get initial session
     const initializeAuth = async () => {
       try {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) {
-          console.error('Error getting session:', sessionError);
-          return;
-        }
-
+        const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-          console.log('Session found, setting user:', session.user);
           setUser(session.user);
-          await registerUserProfile(session.user);
-        } else {
-          console.log('No session found');
-          setUser(null);
         }
       } catch (error) {
         console.error('Error in initializeAuth:', error);
@@ -115,20 +39,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     initializeAuth();
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session?.user);
-      
-      if (session?.user) {
-        setUser(session.user);
-        try {
-          await registerUserProfile(session.user);
-        } catch (error) {
-          console.error('Error registering user profile on auth change:', error);
-        }
-      } else {
-        setUser(null);
-      }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
       setLoading(false);
     });
 
@@ -139,8 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGoogle = async () => {
     try {
-      console.log('Initiating Google sign in');
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           queryParams: {
@@ -151,14 +62,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
       });
 
-      if (error) {
-        console.error('Error signing in with Google:', error);
-        throw error;
-      }
-
-      console.log('Google sign in initiated:', data);
+      if (error) throw error;
     } catch (error) {
       console.error('Error in signInWithGoogle:', error);
+      throw error;
+    }
+  };
+
+  const signIn = async (email: string, password: string) => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error in signIn:', error);
+      throw error;
+    }
+  };
+
+  const signUp = async (email: string, password: string) => {
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error in signUp:', error);
       throw error;
     }
   };
@@ -166,11 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Error signing out:', error);
-        throw error;
-      }
-      console.log('Successfully signed out');
+      if (error) throw error;
     } catch (error) {
       console.error('Error in signOut:', error);
       throw error;
@@ -178,7 +106,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithGoogle, signOut }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      signInWithGoogle, 
+      signOut,
+      signIn,
+      signUp
+    }}>
       {children}
     </AuthContext.Provider>
   );
