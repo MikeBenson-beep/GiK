@@ -20,6 +20,7 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import AuthCallback from '@/pages/auth/callback';
 import Auth from '@/pages/Auth';
 import { SignOutButton } from '@/components/SignOutButton';
+import SignUp from '@/pages/SignUp';
 
 function Home() {
   const articles = [
@@ -158,7 +159,7 @@ export default function App() {
           </ProtectedRoute>
         } />
         <Route path="/signin" element={<SignIn />} />
-        <Route path="/signup" element={<Navigate to="/signin" replace />} />
+        <Route path="/signup" element={<SignUp />} />
       </Routes>
       <Toaster />
     </AuthProvider>

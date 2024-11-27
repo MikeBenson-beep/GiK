@@ -17,13 +17,24 @@ export default function AuthCallback() {
 
         // Only create profile if it doesn't exist
         if (!existingProfile) {
+          
+          // Get the nickname from localStorage if it exists
+          const userNickname = localStorage.getItem('userNickname');
+          if (!userNickname) {
+            navigate('/signup');
+            return;
+          }
+
+          
+          const nickname = localStorage.getItem('userNickname') || user.email?.split('@')[0];
+          
           const { error } = await supabase
             .from('profiles')
             .insert([
               {
                 id: user.id,
                 email: user.email,
-                name: user.user_metadata.full_name || user.email?.split('@')[0],
+                name: nickname,
                 portfolio: [],
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString(),
@@ -34,6 +45,9 @@ export default function AuthCallback() {
             throw error;
           }
         }
+
+        // Clean up localStorage
+        localStorage.removeItem('userNickname');
 
         // Redirect to journey page after profile is created/verified
         navigate('/journey');

@@ -22,7 +22,7 @@ export default function Auth() {
         </div>
 
         <motion.div 
-          className="space-y-4"
+          className="space-y-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
