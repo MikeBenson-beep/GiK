@@ -20,6 +20,7 @@ interface Asset {
   price: number;
 }
 
+// Props for the PortfolioManager component
 interface PortfolioManagerProps {
   initialAssets?: Asset[];
   onUpdate: (assets: Asset[]) => void;
