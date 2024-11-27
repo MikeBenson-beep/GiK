@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, X, TrendingUp, DollarSign, Briefcase, Pencil } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -15,18 +15,26 @@ import {
 } from "@/components/ui/table";
 
 interface Asset {
-  id: string;
   name: string;
   amount: number;
   price: number;
 }
 
-export function PortfolioManager() {
-  const [assets, setAssets] = useState<Asset[]>([]);
+interface PortfolioManagerProps {
+  initialAssets?: Asset[];
+  onUpdate: (assets: Asset[]) => void;
+}
+
+export function PortfolioManager({ initialAssets = [], onUpdate }: PortfolioManagerProps) {
+  const [assets, setAssets] = useState<Asset[]>(initialAssets);
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [newAsset, setNewAsset] = useState({ name: '', amount: '', price: '' });
   const { toast } = useToast();
+
+  useEffect(() => {
+    setAssets(initialAssets);
+  }, [initialAssets]);
 
   const totalValue = assets.reduce((sum, asset) => sum + asset.amount * asset.price, 0);
 
@@ -41,13 +49,14 @@ export function PortfolioManager() {
     }
 
     const asset = {
-      id: Date.now().toString(),
       name: newAsset.name,
       amount: parseFloat(newAsset.amount),
       price: parseFloat(newAsset.price),
     };
 
-    setAssets([...assets, asset]);
+    const updatedAssets = [...assets, asset];
+    setAssets(updatedAssets);
+    onUpdate(updatedAssets);
     setNewAsset({ name: '', amount: '', price: '' });
     setIsAdding(false);
     
@@ -70,7 +79,7 @@ export function PortfolioManager() {
   const handleUpdateAsset = () => {
     if (!editingId) return;
 
-    setAssets(assets.map(asset => 
+    const updatedAssets = assets.map(asset => 
       asset.id === editingId
         ? {
             ...asset,
@@ -79,8 +88,10 @@ export function PortfolioManager() {
             price: parseFloat(newAsset.price),
           }
         : asset
-    ));
+    );
 
+    setAssets(updatedAssets);
+    onUpdate(updatedAssets);
     setEditingId(null);
     setNewAsset({ name: '', amount: '', price: '' });
     setIsAdding(false);
@@ -92,7 +103,9 @@ export function PortfolioManager() {
   };
 
   const handleRemoveAsset = (id: string) => {
-    setAssets(assets.filter(asset => asset.id !== id));
+    const updatedAssets = assets.filter(asset => asset.id !== id);
+    setAssets(updatedAssets);
+    onUpdate(updatedAssets);
     toast({
       title: "Asset Removed",
       description: "The asset has been removed from your portfolio",

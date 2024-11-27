@@ -7,6 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { JourneyProgress } from '@/components/JourneyProgress';
 import { CustomOption } from '@/components/CustomOption';
+import { useAuth } from '@/contexts/AuthContext';
+import { updateProfile } from '@/services/ProfileService';
+import { useToast } from '@/components/ui/use-toast';
 
 const riskLevels = [
   {
@@ -41,10 +44,30 @@ const riskLevels = [
 
 export default function RiskTolerance() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [selectedRisk, setSelectedRisk] = useState<string | null>(null);
 
   const handleCustomOption = (value: string) => {
     setSelectedRisk(value);
+  };
+
+  const handleRiskSelection = async () => {
+    try {
+      if (!user || !selectedRisk) throw new Error('No user or risk level selected');
+      
+      await updateProfile(user.id, {
+        risk_level: selectedRisk
+      });
+      
+      navigate('/journey/objectives');
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save risk level. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -113,7 +136,7 @@ export default function RiskTolerance() {
             className="flex justify-center"
           >
             <Button
-              onClick={() => navigate('/journey/objectives')}
+              onClick={handleRiskSelection}
               disabled={!selectedRisk}
               className="group relative px-8 py-6 bg-white/5 hover:bg-white/10 text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >

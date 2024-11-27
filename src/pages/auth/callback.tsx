@@ -8,15 +8,15 @@ export default function AuthCallback() {
   useEffect(() => {
     const createUserProfile = async (user: any) => {
       try {
-        // Check if profile exists
+        // First check if profile exists
         const { data: existingProfile } = await supabase
           .from('profiles')
           .select('id')
           .eq('id', user.id)
           .single();
 
+        // Only create profile if it doesn't exist
         if (!existingProfile) {
-          // Create new profile if it doesn't exist
           const { error } = await supabase
             .from('profiles')
             .insert([
@@ -30,7 +30,9 @@ export default function AuthCallback() {
               }
             ]);
 
-          if (error) throw error;
+          if (error && error.code !== '23505') { // Ignore duplicate key errors
+            throw error;
+          }
         }
 
         // Redirect to journey page after profile is created/verified
@@ -41,7 +43,6 @@ export default function AuthCallback() {
       }
     };
 
-    // Handle the OAuth callback
     const handleCallback = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();

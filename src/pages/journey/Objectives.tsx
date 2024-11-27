@@ -5,6 +5,9 @@ import { ArrowRight } from 'lucide-react';
 import Logo from '@/components/Logo';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useAuth } from '@/contexts/AuthContext';
+import { updateProfile } from '@/services/ProfileService';
+import { useToast } from '@/components/ui/use-toast';
 
 const objectives = [
   {
@@ -31,7 +34,27 @@ const objectives = [
 
 export default function Objectives() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [selectedObjective, setSelectedObjective] = useState<string | null>(null);
+
+  const handleObjectiveSelection = async () => {
+    try {
+      if (!user || !selectedObjective) throw new Error('No user or objective selected');
+      
+      await updateProfile(user.id, {
+        investment_objective: selectedObjective
+      });
+      
+      navigate('/journey/timeline');
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save objective. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -89,7 +112,7 @@ export default function Objectives() {
             className="flex justify-center"
           >
             <Button
-              onClick={() => navigate('/journey/timeline')}
+              onClick={handleObjectiveSelection}
               disabled={!selectedObjective}
               className="group relative px-8 py-6 bg-white/5 hover:bg-white/10 text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
