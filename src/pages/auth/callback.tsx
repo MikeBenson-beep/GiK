@@ -11,45 +11,52 @@ export default function AuthCallback() {
         // First check if profile exists
         const { data: existingProfile } = await supabase
           .from('profiles')
-          .select('id')
+          .select('id, completed_journey')
           .eq('id', user.id)
           .single();
 
-        // Only create profile if it doesn't exist
-        if (!existingProfile) {
-          
-          // Get the nickname from localStorage if it exists
-          const userNickname = localStorage.getItem('userNickname');
-          if (!userNickname) {
-            navigate('/signup');
+        if (existingProfile) {
+          // If profile exists and journey is completed, go to landing
+          if (existingProfile.completed_journey) {
+            navigate('/');
             return;
           }
+          // If profile exists but journey not completed, continue to journey
+          navigate('/journey');
+          return;
+        }
 
-          
-          const nickname = localStorage.getItem('userNickname') || user.email?.split('@')[0];
-          
-          const { error } = await supabase
-            .from('profiles')
-            .insert([
-              {
-                id: user.id,
-                email: user.email,
-                name: nickname,
-                portfolio: [],
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-              }
-            ]);
+        // Profile doesn't exist, create new profile
+        const userNickname = localStorage.getItem('userNickname');
+        if (!userNickname) {
+          navigate('/signup');
+          return;
+        }
 
-          if (error && error.code !== '23505') { // Ignore duplicate key errors
-            throw error;
-          }
+        const nickname = localStorage.getItem('userNickname') || user.email?.split('@')[0];
+        
+        const { error } = await supabase
+          .from('profiles')
+          .insert([
+            {
+              id: user.id,
+              email: user.email,
+              name: nickname,
+              portfolio: [],
+              completed_journey: false,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            }
+          ]);
+
+        if (error && error.code !== '23505') { // Ignore duplicate key errors
+          throw error;
         }
 
         // Clean up localStorage
         localStorage.removeItem('userNickname');
 
-        // Redirect to journey page after profile is created/verified
+        // New user, redirect to journey
         navigate('/journey');
       } catch (error) {
         console.error('Error in createUserProfile:', error);

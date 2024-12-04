@@ -11,6 +11,7 @@ import { JourneySummary } from '@/components/JourneySummary';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { updateProfile } from '@/services/ProfileService';
+import { supabase } from '@/lib/supabase';
 
 const timeframes = [
   {
@@ -68,6 +69,28 @@ export default function Timeline() {
     setSelectedTimeframe(value);
   };
 
+  const handleComplete = async () => {
+    if (!user) return;
+
+    try {
+      // Update the profile to mark journey as completed
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          completed_journey: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      // Navigate to home page after completion
+      navigate('/');
+    } catch (error) {
+      console.error('Error completing journey:', error);
+    }
+  };
+
   if (showSummary) {
     return (
       <div className="min-h-screen bg-black text-white">
@@ -103,7 +126,7 @@ export default function Timeline() {
               className="flex justify-center mt-12"
             >
               <Button
-                onClick={() => navigate('/')}
+                onClick={handleComplete}
                 className="group relative px-8 py-6 bg-white text-black hover:bg-gray-100 transition-all duration-300"
               >
                 <span className="flex items-center">
